@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: realteeth-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: realteeth
+      MYSQL_USER: realteeth
+      MYSQL_PASSWORD: realteeth
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+  redis:
+    image: redis:7-alpine
+    container_name: realteeth-redis
+    ports:
+      - "6379:6379"
+
+  app:
+    build: .
+    container_name: realteeth-app
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      - mysql
+      - redis
+
+volumes:
+  mysql-data:
