@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: realteeth
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/realteeth?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: realteeth
+    password: realteeth
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+mock-worker:
+  base-url: https://dev.realteeth.ai/mock
+  api-key: ${MOCK_WORKER_API_KEY:}
+
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+
+  datasource:
+    url: jdbc:mysql://mysql:3306/realteeth?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+
+  data:
+    redis:
+      host: redis
