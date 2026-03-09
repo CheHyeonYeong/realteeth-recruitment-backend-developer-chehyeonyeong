@@ -1,4 +1,4 @@
-package com.realteeth.application.dto
+package com.realteeth.task.dto
 
 import jakarta.validation.constraints.NotBlank
 

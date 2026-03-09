@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Detail</title>
+    <link rel="stylesheet" th:href="@{/app.css}">
+</head>
+<body>
+<main class="layout">
+    <section class="panel">
+        <div class="panel-header">
+            <div>
+                <p class="eyebrow">Task detail</p>
+                <h1 th:text="'Task #' + ${taskId}">Task</h1>
+            </div>
+            <a href="/tasks" class="secondary-link">Back to tasks</a>
+        </div>
+        <div id="task-detail" class="task-detail"></div>
+    </section>
+</main>
+
+<script th:inline="javascript">
+    const taskId = /*[[${taskId}]]*/ 0;
+    const detailElement = document.getElementById('task-detail');
+    let pollTimer = null;
+
+    function renderTask(task) {
+        detailElement.innerHTML = `
+            <div class="detail-grid">
+                <div class="detail-item"><span>Status</span><strong class="status status-${task.status}">${task.status}</strong></div>
+                <div class="detail-item"><span>External Job</span><strong>${task.externalJobId || '-'}</strong></div>
+                <div class="detail-item"><span>Retry</span><strong>${task.retryCount}/${task.maxRetryCount}</strong></div>
+                <div class="detail-item"><span>Next Retry</span><strong>${task.nextRetryAt ? new Date(task.nextRetryAt).toLocaleString() : '-'}</strong></div>
+                <div class="detail-item full"><span>Image URL</span><strong>${task.imageUrl}</strong></div>
+                <div class="detail-item full"><span>Result</span><pre>${task.result || '-'}</pre></div>
+                <div class="detail-item full"><span>Last Error</span><pre>${task.lastErrorMessage || '-'}</pre></div>
+            </div>
+        `;
+    }
+
+    async function loadTask() {
+        const response = await fetch(`/api/tasks/${taskId}`);
+        const payload = await response.json();
+
+        if (!response.ok) {
+            detailElement.innerHTML = `<p class="error-message">${payload.message || 'Failed to load task'}</p>`;
+            if (pollTimer) {
+                window.clearInterval(pollTimer);
+            }
+            return;
+        }
+
+        renderTask(payload);
+        if (payload.status === 'COMPLETED' || payload.status === 'FAILED') {
+            if (pollTimer) {
+                window.clearInterval(pollTimer);
+            }
+        }
+    }
+
+    loadTask();
+    pollTimer = window.setInterval(loadTask, 2000);
+</script>
+</body>
+</html>

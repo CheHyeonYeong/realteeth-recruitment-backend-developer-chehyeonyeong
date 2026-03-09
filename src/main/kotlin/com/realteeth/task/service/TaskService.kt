@@ -1,22 +1,26 @@
-package com.realteeth.application.service
+package com.realteeth.task.service
 
-import com.realteeth.application.dto.CreateTaskRequest
-import com.realteeth.application.dto.CreateTaskResponse
-import com.realteeth.application.dto.TaskResponse
-import com.realteeth.domain.entity.ImageTask
-import com.realteeth.domain.entity.TaskStatus
-import com.realteeth.domain.repository.ImageTaskRepository
+import com.realteeth.infrastructure.queue.TaskQueueGateway
+import com.realteeth.task.dto.CreateTaskRequest
+import com.realteeth.task.dto.CreateTaskResponse
+import com.realteeth.task.dto.TaskResponse
+import com.realteeth.task.entity.ImageTask
+import com.realteeth.task.entity.TaskStatus
+import com.realteeth.task.repository.ImageTaskRepository
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.security.MessageDigest
 
 @Service
 class TaskService(
-    private val imageTaskRepository: ImageTaskRepository
+    private val imageTaskRepository: ImageTaskRepository,
+    private val taskQueueGateway: TaskQueueGateway
 ) {
     @Transactional
     fun createTask(request: CreateTaskRequest): CreateTaskResponse {
-        val idempotencyKey = generateIdempotencyKey(request.imageUrl)
+        val normalizedImageUrl = request.imageUrl.trim()
+        val idempotencyKey = generateIdempotencyKey(normalizedImageUrl)
 
         val existingTask = imageTaskRepository.findByIdempotencyKey(idempotencyKey)
         if (existingTask.isPresent) {
@@ -30,9 +34,22 @@ class TaskService(
 
         val task = ImageTask(
             idempotencyKey = idempotencyKey,
-            imageUrl = request.imageUrl
+            imageUrl = normalizedImageUrl
         )
-        val savedTask = imageTaskRepository.save(task)
+        val savedTask = try {
+            imageTaskRepository.saveAndFlush(task)
+        } catch (_: DataIntegrityViolationException) {
+            val duplicatedTask = imageTaskRepository.findByIdempotencyKey(idempotencyKey)
+                .orElseThrow { IllegalStateException("Task creation conflicted but existing task was not found") }
+
+            return CreateTaskResponse(
+                id = duplicatedTask.id,
+                status = duplicatedTask.status,
+                message = "Task already exists"
+            )
+        }
+
+        taskQueueGateway.enqueue(savedTask.id)
 
         return CreateTaskResponse(
             id = savedTask.id,
@@ -50,7 +67,7 @@ class TaskService(
 
     @Transactional(readOnly = true)
     fun getAllTasks(): List<TaskResponse> {
-        return imageTaskRepository.findAll().map { TaskResponse.from(it) }
+        return imageTaskRepository.findAllByOrderByCreatedAtDesc().map { TaskResponse.from(it) }
     }
 
     @Transactional(readOnly = true)

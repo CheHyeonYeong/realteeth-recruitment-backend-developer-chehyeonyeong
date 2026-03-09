@@ -1,8 +1,8 @@
-package com.realteeth.domain.entity
+package com.realteeth.task.entity
 
 enum class TaskStatus {
     PENDING,
-    IN_PROGRESS,
+    PROCESSING,
     COMPLETED,
     FAILED
 }

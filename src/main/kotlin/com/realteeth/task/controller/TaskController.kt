@@ -1,10 +1,10 @@
-package com.realteeth.presentation.controller
+package com.realteeth.task.controller
 
-import com.realteeth.application.dto.CreateTaskRequest
-import com.realteeth.application.dto.CreateTaskResponse
-import com.realteeth.application.dto.TaskResponse
-import com.realteeth.application.service.TaskService
-import com.realteeth.domain.entity.TaskStatus
+import com.realteeth.task.dto.CreateTaskRequest
+import com.realteeth.task.dto.CreateTaskResponse
+import com.realteeth.task.dto.TaskResponse
+import com.realteeth.task.entity.TaskStatus
+import com.realteeth.task.service.TaskService
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -28,7 +28,9 @@ class TaskController(
     }
 
     @GetMapping
-    fun getAllTasks(@RequestParam(required = false) status: TaskStatus?): ResponseEntity<List<TaskResponse>> {
+    fun getAllTasks(
+        @RequestParam(required = false) status: TaskStatus?
+    ): ResponseEntity<List<TaskResponse>> {
         val tasks = if (status != null) {
             taskService.getTasksByStatus(status)
         } else {

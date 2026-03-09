@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle}">Realteeth Task Dashboard</title>
+    <link rel="stylesheet" th:href="@{/app.css}">
+</head>
+<body>
+<main class="layout">
+    <section class="panel hero">
+        <p class="eyebrow">Realteeth Assignment Demo</p>
+        <h1>Async image processing dashboard</h1>
+        <p class="lede">Submit an image URL, then watch it move through pending, processing, and final states without leaving the page.</p>
+    </section>
+
+    <section class="panel">
+        <div class="panel-header">
+            <h2>Create task</h2>
+        </div>
+        <form id="task-form" class="task-form">
+            <label for="image-url">Image URL</label>
+            <input id="image-url" name="imageUrl" type="url" placeholder="https://example.com/image.png" required>
+            <button type="submit">Create task</button>
+        </form>
+        <p id="form-message" class="message"></p>
+    </section>
+
+    <section class="panel">
+        <div class="panel-header">
+            <h2>Task list</h2>
+            <button id="refresh-button" type="button" class="secondary">Refresh</button>
+        </div>
+        <div id="task-list" class="task-list"></div>
+    </section>
+</main>
+
+<script>
+    const taskListElement = document.getElementById('task-list');
+    const formMessageElement = document.getElementById('form-message');
+    const taskFormElement = document.getElementById('task-form');
+    const refreshButtonElement = document.getElementById('refresh-button');
+
+    async function fetchTasks() {
+        const response = await fetch('/api/tasks');
+        if (!response.ok) {
+            throw new Error('Failed to load tasks');
+        }
+
+        return response.json();
+    }
+
+    function renderTasks(tasks) {
+        if (tasks.length === 0) {
+            taskListElement.innerHTML = '<p class="empty-state">No tasks yet.</p>';
+            return;
+        }
+
+        taskListElement.innerHTML = tasks.map(task => `
+            <article class="task-card">
+                <div class="task-card-header">
+                    <span class="status status-${task.status}">${task.status}</span>
+                    <a href="/tasks/${task.id}/view">Task #${task.id}</a>
+                </div>
+                <p class="task-url">${task.imageUrl}</p>
+                <dl class="meta-grid">
+                    <div><dt>Retry</dt><dd>${task.retryCount}/${task.maxRetryCount}</dd></div>
+                    <div><dt>Next Try</dt><dd>${task.nextRetryAt ? new Date(task.nextRetryAt).toLocaleString() : '-'}</dd></div>
+                    <div><dt>Updated</dt><dd>${new Date(task.updatedAt).toLocaleString()}</dd></div>
+                </dl>
+                ${task.lastErrorMessage ? `<p class="error-message">${task.lastErrorMessage}</p>` : ''}
+            </article>
+        `).join('');
+    }
+
+    async function loadTasks() {
+        try {
+            const tasks = await fetchTasks();
+            renderTasks(tasks);
+        } catch (error) {
+            taskListElement.innerHTML = `<p class="error-message">${error.message}</p>`;
+        }
+    }
+
+    taskFormElement.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const formData = new FormData(taskFormElement);
+        const imageUrl = formData.get('imageUrl');
+
+        formMessageElement.textContent = '';
+
+        try {
+            const response = await fetch('/api/tasks', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ imageUrl })
+            });
+
+            const payload = await response.json();
+            if (!response.ok) {
+                throw new Error(payload.message || 'Task creation failed');
+            }
+
+            formMessageElement.textContent = `${payload.message} (task #${payload.id})`;
+            taskFormElement.reset();
+            await loadTasks();
+            window.location.href = `/tasks/${payload.id}/view`;
+        } catch (error) {
+            formMessageElement.textContent = error.message;
+        }
+    });
+
+    refreshButtonElement.addEventListener('click', loadTasks);
+
+    loadTasks();
+    window.setInterval(loadTasks, 3000);
+</script>
+</body>
+</html>

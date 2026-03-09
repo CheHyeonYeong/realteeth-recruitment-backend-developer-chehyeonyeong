@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:h2:mem:testdb;MODE=MySQL
+    url: jdbc:h2:mem:realteeth-local;MODE=MySQL
     driver-class-name: org.h2.Driver
     username: sa
     password:
@@ -10,11 +10,6 @@ spring:
       ddl-auto: create-drop
     show-sql: true
 
-  data:
-    redis:
-      host: localhost
-      port: 6379
-
 realteeth:
   tasks:
-    worker-enabled: false
+    queue-mode: in-memory

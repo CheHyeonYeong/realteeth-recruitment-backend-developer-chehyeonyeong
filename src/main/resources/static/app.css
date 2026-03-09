@@ -1,0 +1,226 @@
+:root {
+    --bg: #f4efe7;
+    --panel: #fffaf2;
+    --ink: #1d3124;
+    --muted: #6b7d71;
+    --accent: #c97032;
+    --accent-strong: #9a4f1d;
+    --line: #dfd3c1;
+    --success: #2a7a48;
+    --warning: #a66a18;
+    --danger: #a53b3b;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: radial-gradient(circle at top, #fff8ef 0, var(--bg) 55%, #ebe0d1 100%);
+    color: var(--ink);
+    font-family: "Segoe UI", "Apple SD Gothic Neo", sans-serif;
+}
+
+.layout {
+    width: min(980px, calc(100% - 32px));
+    margin: 0 auto;
+    padding: 32px 0 48px;
+}
+
+.panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 20px 40px rgba(73, 53, 34, 0.08);
+}
+
+.hero {
+    background: linear-gradient(135deg, rgba(201, 112, 50, 0.12), rgba(255, 250, 242, 1) 60%);
+}
+
+.eyebrow {
+    margin: 0 0 8px;
+    color: var(--accent-strong);
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+h1, h2 {
+    margin: 0;
+}
+
+.lede {
+    color: var(--muted);
+    max-width: 58ch;
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.task-form {
+    display: grid;
+    gap: 12px;
+}
+
+.task-form input {
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px 14px;
+    background: white;
+}
+
+button,
+.secondary-link {
+    border: 0;
+    border-radius: 999px;
+    padding: 11px 16px;
+    background: var(--accent);
+    color: white;
+    cursor: pointer;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.secondary,
+.secondary-link {
+    background: transparent;
+    color: var(--accent-strong);
+    border: 1px solid var(--line);
+}
+
+.task-list {
+    display: grid;
+    gap: 12px;
+}
+
+.task-card {
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.task-card-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.task-card-header a {
+    color: var(--ink);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.status-PENDING,
+.status-PROCESSING {
+    background: rgba(166, 106, 24, 0.12);
+    color: var(--warning);
+}
+
+.status-COMPLETED {
+    background: rgba(42, 122, 72, 0.12);
+    color: var(--success);
+}
+
+.status-FAILED {
+    background: rgba(165, 59, 59, 0.12);
+    color: var(--danger);
+}
+
+.task-url,
+.message,
+.empty-state,
+.error-message {
+    margin: 0;
+    color: var(--muted);
+    word-break: break-all;
+}
+
+.error-message {
+    color: var(--danger);
+}
+
+.meta-grid,
+.detail-grid {
+    display: grid;
+    gap: 12px;
+}
+
+.meta-grid {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    margin: 12px 0 0;
+}
+
+.meta-grid dt,
+.detail-item span {
+    color: var(--muted);
+    font-size: 0.85rem;
+}
+
+.meta-grid dd,
+.detail-item strong {
+    margin: 6px 0 0;
+    font-weight: 600;
+}
+
+.detail-grid {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.detail-item {
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.85);
+}
+
+.detail-item.full {
+    grid-column: 1 / -1;
+}
+
+pre {
+    margin: 8px 0 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+@media (max-width: 640px) {
+    .layout {
+        width: calc(100% - 20px);
+        padding-top: 20px;
+    }
+
+    .panel {
+        padding: 18px;
+    }
+
+    .panel-header,
+    .task-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

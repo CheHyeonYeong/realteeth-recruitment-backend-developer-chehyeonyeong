@@ -2,6 +2,9 @@ spring:
   application:
     name: realteeth
 
+  thymeleaf:
+    cache: false
+
   datasource:
     url: jdbc:mysql://localhost:3306/realteeth?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
     username: realteeth
@@ -25,6 +28,19 @@ spring:
 mock-worker:
   base-url: https://dev.realteeth.ai/mock
   api-key: ${MOCK_WORKER_API_KEY:}
+  candidate-name: ${MOCK_WORKER_CANDIDATE_NAME:Realteeth Candidate}
+  candidate-email: ${MOCK_WORKER_CANDIDATE_EMAIL:candidate@example.com}
+
+realteeth:
+  tasks:
+    worker-enabled: true
+    queue-mode: redis
+    queue-name: realteeth:tasks
+    batch-size: 10
+    retry-delays:
+      - 10s
+      - 30s
+      - 60s
 
 ---
 spring:
