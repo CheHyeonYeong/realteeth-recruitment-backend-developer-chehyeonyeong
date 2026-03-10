@@ -1,12 +1,14 @@
 package com.realteeth.infrastructure.mockworker
 
 import com.realteeth.config.MockWorkerProperties
+import org.springframework.web.reactive.function.client.ClientResponse
 import org.springframework.http.HttpStatusCode
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.core.publisher.Mono
 import java.util.concurrent.atomic.AtomicReference
+import java.util.concurrent.TimeoutException
 
 @Component
 class MockWorkerClient(
@@ -29,18 +31,17 @@ class MockWorkerClient(
             .retrieve()
             .onStatus(HttpStatusCode::isError, ::toMockWorkerException)
             .bodyToMono(ProcessStartResponse::class.java)
-            .block()
-            ?: throw IllegalStateException("Mock Worker returned an empty start response")
+            .await("start response", "process request")
     }
 
     fun getStatus(jobId: String): ProcessStatusResponse {
         return webClient.get()
             .uri("/process/{jobId}", jobId)
+            .header("X-API-KEY", resolveApiKey())
             .retrieve()
             .onStatus(HttpStatusCode::isError, ::toMockWorkerException)
             .bodyToMono(ProcessStatusResponse::class.java)
-            .block()
-            ?: throw IllegalStateException("Mock Worker returned an empty status response for $jobId")
+            .await("status response for $jobId", "status request for $jobId")
     }
 
     private fun resolveApiKey(): String {
@@ -61,18 +62,30 @@ class MockWorkerClient(
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, ::toMockWorkerException)
                 .bodyToMono(IssueKeyResponse::class.java)
-                .block()
-                ?.apiKey
-                ?: throw IllegalStateException("Mock Worker returned an empty API key response")
+                .await("API key response", "API key issue request")
+                .apiKey
 
             apiKeyRef.set(issuedKey)
             return issuedKey
         }
     }
 
-    private fun toMockWorkerException(response: org.springframework.web.reactive.function.client.ClientResponse): Mono<Throwable> {
+    private fun toMockWorkerException(response: ClientResponse): Mono<Throwable> {
         return response.bodyToMono(MockWorkerErrorResponse::class.java)
-            .map { IllegalStateException("Mock Worker error: ${it.detail}") }
+            .map { it.detail }
+            .defaultIfEmpty("HTTP ${response.statusCode().value()}")
+            .map { IllegalStateException("Mock Worker error: $it") }
+    }
+
+    private fun <T> Mono<T>.await(emptyMessage: String, operation: String): T {
+        return timeout(mockWorkerProperties.requestTimeout)
+            .onErrorMap(TimeoutException::class.java) {
+                IllegalStateException(
+                    "Mock Worker $operation timed out after ${mockWorkerProperties.requestTimeout}"
+                )
+            }
+            .block()
+            ?: throw IllegalStateException("Mock Worker returned an empty $emptyMessage")
     }
 }
 
@@ -91,7 +104,8 @@ data class ProcessRequest(
 
 data class ProcessStartResponse(
     val jobId: String,
-    val status: JobStatus
+    val status: JobStatus,
+    val result: String? = null
 )
 
 data class ProcessStatusResponse(

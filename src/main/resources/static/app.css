@@ -135,9 +135,15 @@ button,
 }
 
 .status-PENDING,
-.status-PROCESSING {
+.status-RETRY_SCHEDULED {
     background: rgba(166, 106, 24, 0.12);
     color: var(--warning);
+}
+
+.status-DISPATCHING,
+.status-PROCESSING {
+    background: rgba(42, 96, 122, 0.12);
+    color: #1f657e;
 }
 
 .status-COMPLETED {
@@ -145,7 +151,7 @@ button,
     color: var(--success);
 }
 
-.status-FAILED {
+.status-DEAD_LETTER {
     background: rgba(165, 59, 59, 0.12);
     color: var(--danger);
 }

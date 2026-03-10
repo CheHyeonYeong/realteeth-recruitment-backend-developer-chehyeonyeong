@@ -52,7 +52,7 @@
         }
 
         renderTask(payload);
-        if (payload.status === 'COMPLETED' || payload.status === 'FAILED') {
+        if (payload.status === 'COMPLETED' || payload.status === 'DEAD_LETTER') {
             if (pollTimer) {
                 window.clearInterval(pollTimer);
             }

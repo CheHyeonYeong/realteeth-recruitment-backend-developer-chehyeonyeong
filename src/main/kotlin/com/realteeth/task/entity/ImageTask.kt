@@ -60,15 +60,31 @@ class ImageTask(
     @Column(nullable = false)
     var updatedAt: LocalDateTime? = null
 ) {
-    fun canStart(now: LocalDateTime): Boolean {
-        if (status != TaskStatus.PENDING) {
+    fun canDispatch(now: LocalDateTime): Boolean {
+        if (status != TaskStatus.PENDING && status != TaskStatus.RETRY_SCHEDULED) {
             return false
         }
         return nextRetryAt?.let { !it.isAfter(now) } ?: true
     }
 
-    fun start(jobId: String, now: LocalDateTime) {
-        require(status == TaskStatus.PENDING) { "Task $id cannot move to PROCESSING from $status" }
+    fun canPoll(now: LocalDateTime): Boolean {
+        if (status != TaskStatus.PROCESSING) {
+            return false
+        }
+        return nextRetryAt?.let { !it.isAfter(now) } ?: true
+    }
+
+    fun claimForDispatch(now: LocalDateTime) {
+        require(canDispatch(now)) { "Task $id cannot move to DISPATCHING from $status" }
+        status = TaskStatus.DISPATCHING
+        nextRetryAt = null
+        lastErrorCode = null
+        lastErrorMessage = null
+        completedAt = null
+    }
+
+    fun startProcessing(jobId: String, now: LocalDateTime) {
+        require(status == TaskStatus.DISPATCHING) { "Task $id cannot move to PROCESSING from $status" }
         externalJobId = jobId
         status = TaskStatus.PROCESSING
         nextRetryAt = null
@@ -89,14 +105,22 @@ class ImageTask(
         completedAt = now
     }
 
-    fun fail(
+    fun recordProcessingHeartbeat(now: LocalDateTime) {
+        require(status == TaskStatus.PROCESSING) { "Task $id cannot stay in PROCESSING from $status" }
+        nextRetryAt = null
+        lastErrorCode = null
+        lastErrorMessage = null
+        updatedAt = now
+    }
+
+    fun scheduleDispatchRetry(
         errorCode: String,
         errorMessage: String,
         now: LocalDateTime,
         retryDelay: Duration?
     ) {
-        require(status == TaskStatus.PENDING || status == TaskStatus.PROCESSING) {
-            "Task $id cannot fail from $status"
+        require(status == TaskStatus.DISPATCHING) {
+            "Task $id cannot schedule dispatch retry from $status"
         }
 
         lastErrorCode = errorCode
@@ -106,13 +130,81 @@ class ImageTask(
 
         if (retryDelay != null) {
             retryCount += 1
-            status = TaskStatus.PENDING
+            status = TaskStatus.RETRY_SCHEDULED
             nextRetryAt = now.plus(retryDelay)
             completedAt = null
             return
         }
 
-        status = TaskStatus.FAILED
+        deadLetter(errorCode, errorMessage, now)
+    }
+
+    fun scheduleRemoteRetry(
+        errorCode: String,
+        errorMessage: String,
+        now: LocalDateTime,
+        retryDelay: Duration?
+    ) {
+        require(status == TaskStatus.PROCESSING) {
+            "Task $id cannot schedule remote retry from $status"
+        }
+
+        lastErrorCode = errorCode
+        lastErrorMessage = errorMessage
+        resultPayload = null
+        externalJobId = null
+
+        if (retryDelay != null) {
+            retryCount += 1
+            status = TaskStatus.RETRY_SCHEDULED
+            nextRetryAt = now.plus(retryDelay)
+            completedAt = null
+            return
+        }
+
+        deadLetter(errorCode, errorMessage, now)
+    }
+
+    fun schedulePollingRetry(
+        errorCode: String,
+        errorMessage: String,
+        now: LocalDateTime,
+        retryDelay: Duration?
+    ) {
+        require(status == TaskStatus.PROCESSING) {
+            "Task $id cannot schedule polling retry from $status"
+        }
+
+        lastErrorCode = errorCode
+        lastErrorMessage = errorMessage
+
+        if (retryDelay != null) {
+            retryCount += 1
+            nextRetryAt = now.plus(retryDelay)
+            completedAt = null
+            return
+        }
+
+        deadLetter(errorCode, errorMessage, now)
+    }
+
+    fun deadLetter(
+        errorCode: String,
+        errorMessage: String,
+        now: LocalDateTime
+    ) {
+        require(
+            status == TaskStatus.PENDING ||
+                status == TaskStatus.RETRY_SCHEDULED ||
+                status == TaskStatus.DISPATCHING ||
+                status == TaskStatus.PROCESSING
+        ) {
+            "Task $id cannot move to DEAD_LETTER from $status"
+        }
+
+        lastErrorCode = errorCode
+        lastErrorMessage = errorMessage
+        status = TaskStatus.DEAD_LETTER
         nextRetryAt = null
         completedAt = now
     }

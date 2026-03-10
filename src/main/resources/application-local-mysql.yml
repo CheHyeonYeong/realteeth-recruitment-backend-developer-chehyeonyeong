@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    url: jdbc:mysql://${REALTEETH_MYSQL_HOST:localhost}:${REALTEETH_MYSQL_PORT:3306}/${REALTEETH_MYSQL_DATABASE:realteeth}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: ${REALTEETH_MYSQL_USERNAME:realteeth}
+    password: ${REALTEETH_MYSQL_PASSWORD:realteeth}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+  data:
+    redis:
+      host: ${REALTEETH_REDIS_HOST:localhost}
+      port: ${REALTEETH_REDIS_PORT:6379}
+
+realteeth:
+  tasks:
+    queue-mode: redis

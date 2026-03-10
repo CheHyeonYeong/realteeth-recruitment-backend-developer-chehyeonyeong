@@ -16,11 +16,19 @@ class RedisTaskQueueGateway(
     private val taskProcessingProperties: TaskProcessingProperties
 ) : TaskQueueGateway {
     override fun enqueue(taskId: Long) {
-        redisTemplate.opsForList().rightPush(taskProcessingProperties.queueName, taskId.toString())
+        try {
+            redisTemplate.opsForList().rightPush(taskProcessingProperties.queueName, taskId.toString())
+        } catch (exception: Exception) {
+            throw TaskQueueAccessException("Failed to enqueue task $taskId", exception)
+        }
     }
 
     override fun dequeue(): Long? {
-        val value = redisTemplate.opsForList().leftPop(taskProcessingProperties.queueName) ?: return null
-        return value.toLongOrNull()
+        try {
+            val value = redisTemplate.opsForList().leftPop(taskProcessingProperties.queueName) ?: return null
+            return value.toLongOrNull()
+        } catch (exception: Exception) {
+            throw TaskQueueAccessException("Failed to dequeue task", exception)
+        }
     }
 }

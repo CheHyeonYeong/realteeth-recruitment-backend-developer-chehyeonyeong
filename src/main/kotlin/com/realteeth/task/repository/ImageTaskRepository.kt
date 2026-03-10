@@ -8,6 +8,7 @@ import java.util.Optional
 interface ImageTaskRepository : JpaRepository<ImageTask, Long> {
     fun findByIdempotencyKey(idempotencyKey: String): Optional<ImageTask>
     fun findByStatus(status: TaskStatus): List<ImageTask>
+    fun findByStatusInOrderByUpdatedAtAsc(statuses: Collection<TaskStatus>): List<ImageTask>
     fun findByStatusOrderByUpdatedAtAsc(status: TaskStatus): List<ImageTask>
     fun findAllByOrderByCreatedAtDesc(): List<ImageTask>
 }

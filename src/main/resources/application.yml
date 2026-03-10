@@ -6,9 +6,9 @@ spring:
     cache: false
 
   datasource:
-    url: jdbc:mysql://localhost:3306/realteeth?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-    username: realteeth
-    password: realteeth
+    url: jdbc:mysql://${REALTEETH_MYSQL_HOST:localhost}:${REALTEETH_MYSQL_PORT:3306}/${REALTEETH_MYSQL_DATABASE:realteeth}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: ${REALTEETH_MYSQL_USERNAME:realteeth}
+    password: ${REALTEETH_MYSQL_PASSWORD:realteeth}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -22,14 +22,15 @@ spring:
 
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${REALTEETH_REDIS_HOST:localhost}
+      port: ${REALTEETH_REDIS_PORT:6379}
 
 mock-worker:
   base-url: https://dev.realteeth.ai/mock
   api-key: ${MOCK_WORKER_API_KEY:}
   candidate-name: ${MOCK_WORKER_CANDIDATE_NAME:Realteeth Candidate}
   candidate-email: ${MOCK_WORKER_CANDIDATE_EMAIL:candidate@example.com}
+  request-timeout: ${MOCK_WORKER_REQUEST_TIMEOUT:10s}
 
 realteeth:
   tasks:
@@ -37,6 +38,7 @@ realteeth:
     queue-mode: redis
     queue-name: realteeth:tasks
     batch-size: 10
+    dispatch-stale-after: 30s
     retry-delays:
       - 10s
       - 30s

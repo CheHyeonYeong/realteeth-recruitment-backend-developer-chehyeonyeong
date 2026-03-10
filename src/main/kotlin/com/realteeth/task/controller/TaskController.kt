@@ -18,7 +18,7 @@ class TaskController(
     @PostMapping
     fun createTask(@Valid @RequestBody request: CreateTaskRequest): ResponseEntity<CreateTaskResponse> {
         val response = taskService.createTask(request)
-        val status = if (response.message == "Task already exists") HttpStatus.OK else HttpStatus.CREATED
+        val status = if (response.created) HttpStatus.CREATED else HttpStatus.OK
         return ResponseEntity.status(status).body(response)
     }
 

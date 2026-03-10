@@ -28,8 +28,4 @@ Thumbs.db
 # Environment
 .env
 *.env.local
-
-# Claude
-.claude/
-CLAUDE.md
-docs/*
+.gradle-local/

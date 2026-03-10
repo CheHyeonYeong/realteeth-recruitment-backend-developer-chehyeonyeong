@@ -9,6 +9,7 @@ data class TaskProcessingProperties(
     val queueMode: String = "redis",
     val queueName: String = "realteeth:tasks",
     val batchSize: Int = 10,
+    val dispatchStaleAfter: Duration = Duration.ofSeconds(30),
     val retryDelays: List<Duration> = listOf(
         Duration.ofSeconds(10),
         Duration.ofSeconds(30),
