@@ -4,6 +4,9 @@ import jakarta.validation.Constraint
 import jakarta.validation.Payload
 import kotlin.reflect.KClass
 
+/**
+ * `http` 또는 `https` 이미지 URL만 허용하도록 만드는 커스텀 검증 어노테이션이다.
+ */
 @Target(
     AnnotationTarget.FIELD,
     AnnotationTarget.VALUE_PARAMETER,

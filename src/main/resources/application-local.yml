@@ -1,3 +1,5 @@
+# IntelliJ나 로컬 실행용 프로필이다.
+# H2 + in-memory queue를 쓰므로 MySQL / Redis가 없어도 바로 뜬다.
 spring:
   datasource:
     url: jdbc:h2:mem:realteeth-local;MODE=MySQL

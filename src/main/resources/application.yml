@@ -1,3 +1,5 @@
+# 기본 프로필 설정이다.
+# 별도 프로필을 주지 않으면 MySQL + Redis 조합으로 동작한다.
 spring:
   application:
     name: realteeth
@@ -25,7 +27,11 @@ spring:
       host: ${REALTEETH_REDIS_HOST:localhost}
       port: ${REALTEETH_REDIS_PORT:6379}
 
+  # TODO(kafka): Kafka를 도입하면 이 아래에 `spring.kafka.producer.*`,
+  # `spring.kafka.consumer.*`, bootstrap-servers, group-id 같은 설정을 추가한다.
+
 mock-worker:
+  # 면접 과제에서 제공한 외부 Mock Worker 서버 주소
   base-url: https://dev.realteeth.ai/mock
   api-key: ${MOCK_WORKER_API_KEY:}
   candidate-name: ${MOCK_WORKER_CANDIDATE_NAME:Realteeth Candidate}
@@ -34,17 +40,22 @@ mock-worker:
 
 realteeth:
   tasks:
+    # worker 스케줄러를 켤지 여부
     worker-enabled: true
+    # TODO(kafka): Kafka 도입 시 queue-mode를 kafka로 분기하도록 확장할 수 있다.
     queue-mode: redis
+    # TODO(kafka): Kafka topic 이름으로 재사용하거나, topic-name을 별도 분리한다.
     queue-name: realteeth:tasks
     batch-size: 10
     dispatch-stale-after: 30s
+    # 1차, 2차, 3차 재시도 대기 시간
     retry-delays:
       - 10s
       - 30s
       - 60s
 
 ---
+# docker 프로필은 컨테이너 내부 호스트 이름을 사용한다.
 spring:
   config:
     activate:

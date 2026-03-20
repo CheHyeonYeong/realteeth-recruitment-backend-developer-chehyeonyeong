@@ -21,10 +21,12 @@
 </main>
 
 <script th:inline="javascript">
+    // Thymeleaf가 서버에서 taskId 값을 HTML 안에 직접 주입한다.
     const taskId = /*[[${taskId}]]*/ 0;
     const detailElement = document.getElementById('task-detail');
     let pollTimer = null;
 
+    // 상세 데이터를 보기 좋게 HTML로 그린다.
     function renderTask(task) {
         detailElement.innerHTML = `
             <div class="detail-grid">
@@ -39,6 +41,7 @@
         `;
     }
 
+    // 특정 작업 1건의 최신 상태를 가져온다.
     async function loadTask() {
         const response = await fetch(`/api/tasks/${taskId}`);
         const payload = await response.json();
@@ -53,12 +56,14 @@
 
         renderTask(payload);
         if (payload.status === 'COMPLETED' || payload.status === 'DEAD_LETTER') {
+            // 최종 상태면 더 이상 polling할 필요가 없다.
             if (pollTimer) {
                 window.clearInterval(pollTimer);
             }
         }
     }
 
+    // 페이지 진입 즉시 한 번 조회하고, 이후 2초마다 다시 조회한다.
     loadTask();
     pollTimer = window.setInterval(loadTask, 2000);
 </script>

@@ -4,6 +4,8 @@ import com.realteeth.task.entity.ImageTask
 import com.realteeth.task.entity.TaskStatus
 import java.time.LocalDateTime
 
+// 저장된 ImageTask 엔티티를 API 응답용으로 펼친 형태다.
+// data class는 equals/hashCode/toString 등을 자동 생성해 주는 Kotlin 문법이다.
 data class TaskResponse(
     val id: Long,
     val imageUrl: String,
@@ -21,6 +23,8 @@ data class TaskResponse(
     val updatedAt: LocalDateTime
 ) {
     companion object {
+        // companion object는 Java의 static 메서드 비슷하게 생각하면 된다.
+        // 엔티티를 그대로 외부에 노출하지 않고, 필요한 값만 응답 DTO로 옮긴다.
         fun from(task: ImageTask) = TaskResponse(
             id = task.id,
             imageUrl = task.imageUrl,

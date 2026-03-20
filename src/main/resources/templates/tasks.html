@@ -36,11 +36,13 @@
 </main>
 
 <script>
+    // 화면에서 자주 접근하는 DOM 요소를 미리 잡아 둔다.
     const taskListElement = document.getElementById('task-list');
     const formMessageElement = document.getElementById('form-message');
     const taskFormElement = document.getElementById('task-form');
     const refreshButtonElement = document.getElementById('refresh-button');
 
+    // 서버에서 전체 작업 목록을 가져온다.
     async function fetchTasks() {
         const response = await fetch('/api/tasks');
         if (!response.ok) {
@@ -50,6 +52,7 @@
         return response.json();
     }
 
+    // 받은 작업 목록을 카드 형태 HTML로 렌더링한다.
     function renderTasks(tasks) {
         if (tasks.length === 0) {
             taskListElement.innerHTML = '<p class="empty-state">No tasks yet.</p>';
@@ -73,6 +76,7 @@
         `).join('');
     }
 
+    // 목록 새로고침 진입점이다.
     async function loadTasks() {
         try {
             const tasks = await fetchTasks();
@@ -82,6 +86,7 @@
         }
     }
 
+    // 폼 전송 시 기본 브라우저 submit을 막고 fetch로 API를 호출한다.
     taskFormElement.addEventListener('submit', async (event) => {
         event.preventDefault();
         const formData = new FormData(taskFormElement);
@@ -106,6 +111,7 @@
             formMessageElement.textContent = `${payload.message} (task #${payload.id})`;
             taskFormElement.reset();
             await loadTasks();
+            // 생성 직후에는 상세 화면으로 보내서 상태 변화를 바로 보게 한다.
             window.location.href = `/tasks/${payload.id}/view`;
         } catch (error) {
             formMessageElement.textContent = error.message;
@@ -114,6 +120,7 @@
 
     refreshButtonElement.addEventListener('click', loadTasks);
 
+    // 첫 렌더링 때 한 번 불러오고, 이후에는 3초마다 자동 갱신한다.
     loadTasks();
     window.setInterval(loadTasks, 3000);
 </script>
